@@ -66,6 +66,14 @@ fn main() {
         TETRIS_HEIGHT as u32 * 16 + 20,
     ).expect("Failed to create border");
 
+    let preview = create_texture_rect(
+        &mut canvas,
+        &texture_creator,
+        Color::RGB(0, 0, 0),
+        TETRIS_HEIGHT as u32 * 4,
+        TETRIS_HEIGHT as u32 * 4,
+    ).expect("Failed to create preview");
+
     macro_rules! texture {
         ($r:expr, $g:expr, $b:expr) => (
             create_texture_rect(
@@ -90,6 +98,7 @@ fn main() {
     
     let mut tetris = Tetris::new();
     let mut timer = SystemTime::now();
+    let mut next_piece = tetris.create_new_tetrimino();
 
     loop {
         if tetris.is_time_over(&mut timer) {
@@ -130,16 +139,46 @@ fn main() {
                 TETRIS_HEIGHT as u32 * 16,
             )
         ).expect("Failed to copy grid");
+        canvas.copy(
+            &preview,
+            None,
+            Rect::new(
+                grid_x + TETRIS_HEIGHT as i32 * 10 + 20,
+                height as i32 / 2,
+                TETRIS_HEIGHT as u32 * 4,
+                TETRIS_HEIGHT as u32 * 4,
+            )
+        ).expect("Failed to copy preview");
         
         display_game_information(&tetris, &mut canvas, &texture_creator, &font, grid_x + TETRIS_HEIGHT as i32 * 10 + 20);
 
         if tetris.current_piece.is_none() {
-            let current_piece = tetris.create_new_tetrimino();
+            let current_piece = next_piece;
+            next_piece = tetris.create_new_tetrimino();
             if !current_piece.test_current_position(&tetris.game_map) {
                 print_game_information(&tetris);
                 break;
             }
             tetris.current_piece = Some(current_piece);
+        }
+
+        for (line_nb, line) in next_piece.states[next_piece.current_state as usize].iter().enumerate() {
+            for (case_nb, case) in line.iter().enumerate() {
+                if *case == 0 {
+                    continue
+                }
+
+                canvas.copy(
+                    &textures[*case as usize - 1],
+                    None,
+                    Rect::new(
+                        grid_x + TETRIS_HEIGHT as i32 * 10 + 20 + case_nb as i32 * TETRIS_HEIGHT as i32,
+                        height as i32 / 2 + line_nb as i32 * TETRIS_HEIGHT as i32,
+                        TETRIS_HEIGHT as u32,
+                        TETRIS_HEIGHT as u32,
+                    )
+                ).expect("Failed to draw piece");
+            }
         }
 
         for (line_nb, line) in tetris.game_map.iter().enumerate() {
