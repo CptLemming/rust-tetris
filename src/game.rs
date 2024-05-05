@@ -1,9 +1,9 @@
 use std::time::SystemTime;
+use sdl2::render::{Canvas, Texture};
+use sdl2::video::Window;
+use sdl2::rect::Rect;
 
-use crate::tetriminos::*;
-
-const LEVEL_TIMES: [u32; 10] = [1000, 850, 700, 600, 500, 400, 300, 250, 221, 190];
-const LEVEL_LINES: [u32; 10] = [20,    40,  60,  80, 100, 120, 140, 160, 180, 200];
+use crate::{config::{LEVEL_LINES, LEVEL_TIMES, TETRIS_HEIGHT}, tetriminos::*};
 
 pub struct Tetris {
     pub game_map: Vec<Vec<u8>>,
@@ -131,5 +131,68 @@ impl Tetris {
         }
         Err(_) => false,
       }
+    }
+
+    pub fn draw(&self, canvas: &mut Canvas<Window>, textures: &[Texture<'_>; 8], grid_x: i32, grid_y: i32) {
+        for (line_nb, line) in self.game_map.iter().enumerate() {
+            for (case_nb, case) in line.iter().enumerate() {
+                if *case == 0 {
+                    continue
+                }
+
+                canvas.copy(
+                    &textures[*case as usize - 1],
+                    None,
+                    Rect::new(
+                        grid_x + case_nb as i32 * TETRIS_HEIGHT as i32,
+                        grid_y + line_nb as i32 * TETRIS_HEIGHT as i32,
+                        TETRIS_HEIGHT as u32,
+                        TETRIS_HEIGHT as u32,
+                    )
+                ).expect("Failed to draw grid");
+
+                canvas.copy(
+                    &textures[7],
+                    None,
+                    Rect::new(
+                        grid_x + case_nb as i32 * TETRIS_HEIGHT as i32,
+                        grid_y + line_nb as i32 * TETRIS_HEIGHT as i32,
+                        TETRIS_HEIGHT as u32,
+                        2,
+                    )
+                ).expect("Failed to draw piece");
+                canvas.copy(
+                    &textures[7],
+                    None,
+                    Rect::new(
+                        grid_x + case_nb as i32 * TETRIS_HEIGHT as i32,
+                        grid_y + line_nb as i32 * TETRIS_HEIGHT as i32 + (TETRIS_HEIGHT as i32 - 2),
+                        TETRIS_HEIGHT as u32,
+                        2,
+                    )
+                ).expect("Failed to draw piece");
+        
+                canvas.copy(
+                    &textures[7],
+                    None,
+                    Rect::new(
+                        grid_x + case_nb as i32 * TETRIS_HEIGHT as i32,
+                        grid_y + line_nb as i32 * TETRIS_HEIGHT as i32,
+                        2,
+                        TETRIS_HEIGHT as u32,
+                    )
+                ).expect("Failed to draw piece");
+                canvas.copy(
+                    &textures[7],
+                    None,
+                    Rect::new(
+                        grid_x + case_nb as i32 * TETRIS_HEIGHT as i32 + (TETRIS_HEIGHT as i32 - 2),
+                        grid_y + line_nb as i32 * TETRIS_HEIGHT as i32,
+                        2,
+                        TETRIS_HEIGHT as u32,
+                    )
+                ).expect("Failed to draw piece");
+            }
+        }
     }
 }

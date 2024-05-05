@@ -8,14 +8,15 @@ use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::video::{Window, WindowContext};
-use tetriminos::*;
 use std::thread::sleep;
 use std::time::{Duration, SystemTime};
 
+use crate::config::TETRIS_HEIGHT;
+
 mod tetriminos;
 mod game;
+mod config;
 
-const TETRIS_HEIGHT: usize = 40;
 
 fn main() {
     let sdl_context = sdl2::init().expect("SDL init failed");
@@ -94,6 +95,7 @@ fn main() {
         texture!(77, 149, 239),
         texture!(39, 218, 225),
         texture!(45, 216, 47),
+        texture!(0, 0, 0),
     ];
     
     let mut tetris = Tetris::new();
@@ -162,65 +164,14 @@ fn main() {
             tetris.current_piece = Some(current_piece);
         }
 
-        for (line_nb, line) in next_piece.states[next_piece.current_state as usize].iter().enumerate() {
-            for (case_nb, case) in line.iter().enumerate() {
-                if *case == 0 {
-                    continue
-                }
+        next_piece.preview(&mut canvas, &textures, grid_x, height);
 
-                canvas.copy(
-                    &textures[*case as usize - 1],
-                    None,
-                    Rect::new(
-                        grid_x + TETRIS_HEIGHT as i32 * 10 + 20 + case_nb as i32 * TETRIS_HEIGHT as i32,
-                        height as i32 / 2 + line_nb as i32 * TETRIS_HEIGHT as i32,
-                        TETRIS_HEIGHT as u32,
-                        TETRIS_HEIGHT as u32,
-                    )
-                ).expect("Failed to draw piece");
-            }
-        }
-
-        for (line_nb, line) in tetris.game_map.iter().enumerate() {
-            for (case_nb, case) in line.iter().enumerate() {
-                if *case == 0 {
-                    continue
-                }
-
-                canvas.copy(
-                    &textures[*case as usize - 1],
-                    None,
-                    Rect::new(
-                        grid_x + case_nb as i32 * TETRIS_HEIGHT as i32,
-                        grid_y + line_nb as i32 * TETRIS_HEIGHT as i32,
-                        TETRIS_HEIGHT as u32,
-                        TETRIS_HEIGHT as u32,
-                    )
-                ).expect("Failed to draw grid");
-            }
-        }
+        tetris.draw(&mut canvas, &textures, grid_x, grid_y);
 
         let mut quit = false;
         if !handle_events(&mut tetris, &mut quit, &mut timer, &mut event_pump) {
             if let Some(ref mut piece) = tetris.current_piece {
-                for (line_nb, line) in piece.states[piece.current_state as usize].iter().enumerate() {
-                    for (case_nb, case) in line.iter().enumerate() {
-                        if *case == 0 {
-                            continue
-                        }
-
-                        canvas.copy(
-                            &textures[*case as usize - 1],
-                            None,
-                            Rect::new(
-                                grid_x + (piece.x + case_nb as isize) as i32 * TETRIS_HEIGHT as i32,
-                                grid_y + (piece.y + line_nb) as i32 * TETRIS_HEIGHT as i32,
-                                TETRIS_HEIGHT as u32,
-                                TETRIS_HEIGHT as u32,
-                            )
-                        ).expect("Failed to draw piece");
-                    }
-                }
+                piece.draw(&mut canvas, &textures, grid_x, grid_y);
             }
         }
 
