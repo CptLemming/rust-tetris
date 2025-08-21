@@ -7,8 +7,4 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
-
-[dependencies.sdl2]
-version = "0.36"
-default-features = false
-features = ["ttf"]
+sdl3 = { version = "0.14.40", features = ["ttf"] }
